@@ -2,9 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
+use Throwable;
+use App\Models\User;
 use App\Models\users;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\ChangePwdRequest;
+use App\Http\Resources\ProfileResource;
 use App\Http\Requests\StoreusersRequest;
+use App\Http\Requests\UpdateUserRequest;
+use App\Http\Requests\ChangeEmailRequest;
 use App\Http\Requests\UpdateusersRequest;
+use App\Http\Requests\ChangePasswordRequest;
 
 class UsersController extends Controller
 {
@@ -27,40 +37,132 @@ class UsersController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreusersRequest $request)
+    public function getUser(User $user)
     {
-        //
+        return new ProfileResource($user);
     }
 
     /**
-     * Display the specified resource.
+     * Update the email resource in storage.
      */
-    public function show(users $users)
+    public function changeEmail(ChangeEmailRequest $request, User $user)
     {
-        //
+        try {
+            if (JWTAuth::user()->id != $user->id) {
+                return response()->json([
+                    'message' => 'Unauthorized to change email for this user.'
+                ], 403);  // Forbidden
+            }
+            if (!Hash::check($request->password, JWTAuth::user()->password)) {
+                return response()->json([
+                    'message' => 'Current password is incorrect.'
+                ], 401); // Unauthorized
+            }
+            $user->update([
+                'email' => $request->email,
+                'email_verified_at' => null
+            ]);
+            return response()->json([
+                'message' => 'Email changed successfully.'
+            ], 200);
+
+        } catch (Throwable $error) {
+            return response()->json([
+                'message' => 'Error changing email.',
+                'error' => $error->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Update the password in storage.
      */
-    public function edit(users $users)
+    public function changePassword(ChangePwdRequest $request, User $user)
     {
-        //
+        try {
+            if (JWTAuth::user()->id != $user->id) {
+                return response()->json([
+                    'message' => 'Unauthorized to change password for this user.'
+                ], 403);  // Forbidden
+            }
+            if (!Hash::check($request->password, JWTAuth::user()->password)) {
+                return response()->json([
+                    'message' => 'Current password is incorrect.'
+                ], 401); // Unauthorized
+            }
+            if ($request->new_password != $request->confirm_password) {
+                return response()->json([
+                    'message' => 'New password and confirmation password do not match.'
+                ], 422); // Unprocessable Entity
+            }
+            $user->update([
+                'password' => Hash::make($request->new_password)
+            ]);
+            JWTAuth::invalidate(JWTAuth::getToken());
+
+            return response()->json([
+                'message' => 'Password changed successfully.'
+            ], 200);
+
+        } catch (Throwable $error) {
+            return response()->json([
+                'message' => 'Error changing password.',
+                'error' => $error->getMessage()
+            ], 500);
+        }
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateusersRequest $request, users $users)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        //
+        try {
+            if (JWTAuth::user()->id != $user->id) {
+                return response()->json([
+                    'message' => 'Unauthorized to update this user.'
+                ], 401);  // Unauthorized
+            }
+            $user->update($request->only([
+                'first_name',
+                'last_name',
+                'date_of_birth',
+                'country'
+            ]));
+            return response()->json([
+                'message' => 'User updated successfully.'
+            ], 200);
+
+        } catch (Throwable $error) {
+            return response()->json([
+                'message' => 'Error updating user.',
+                'error' => $error->getMessage()
+            ], 500);
+
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(users $users)
+    public function destroy(User $user)
     {
-        //
+        try {
+            if (JWTAuth::user()->id != $user->id) {
+                return response()->json([
+                    'message' => 'Unauthorized to update this user.'
+                ], 401);  // Unauthorized
+            }
+            $user->deleteOrFail();
+            return response()->json([
+                'message' => 'User deleted successfully.'
+            ], 200);
+
+        } catch (Throwable $error) {
+            return response()->json([
+                'message' => 'Error deleting user.',
+                'error' => $error->getMessage()
+            ], 500);
+        }
     }
 }
