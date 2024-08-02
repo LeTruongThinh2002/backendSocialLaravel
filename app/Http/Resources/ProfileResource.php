@@ -23,6 +23,7 @@ class ProfileResource extends JsonResource
             "email_verify_at" => $this->email_verified_at
                 ? (new Carbon($this->email_verified_at))->format('Y-m-d H:i:s')
                 : null,
+"date_of_birth"=>$this->date_of_birth,
             "created_at" => (new Carbon($this->created_at))->format('Y-m-d H:i:s'),
             "updated_at" => (new Carbon($this->updated_at))->format('Y-m-d H:i:s'),
         ];

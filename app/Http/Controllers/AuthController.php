@@ -39,7 +39,8 @@ class AuthController extends Controller
             if (!$token = JWTAuth::attempt($credentials)) {
                 return response()->json(['error' => $request->password], 401);
             }
-            return $this->respondWithToken($token, $this->refreshToken());
+
+            return $this->respondWithToken($token, $this->refreshToken(JWTAuth::user()));
         } catch (Throwable $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }
@@ -49,7 +50,14 @@ class AuthController extends Controller
     public function register(RegisterRequest $request)
     {
         try {
-            $requestData = $request->validated();
+            $requestData = $request->only([
+                'first_name',
+                'last_name',
+                'email',
+                'password',
+                'date_of_birth',
+                'country'
+            ]);
 
             if (User::where('email', $request['email'])->exists()) {
                 return response()->json(['message' => 'User already exists'], 409);
@@ -59,8 +67,8 @@ class AuthController extends Controller
             );
             event(new Registered($user));
             $token = JWTAuth::fromUser($user);
-            return response()->json(['message' => 'User registered successfully', 'access_token' => $token]);
-        } catch (Exception $error) {
+            return $this->respondWithToken($token, $this->refreshToken($user));
+        } catch (Throwable $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }
     }
@@ -85,10 +93,10 @@ class AuthController extends Controller
         }
     }
 
-    private function refreshToken()
+    private function refreshToken(User $user)
     {
         $access = [
-            'id' => JWTAuth::user()->id,
+            'id' => $user->id,
             'random' => rand() . time(),
             'exp' => time() + config('jwt.refresh_ttl')
         ];
@@ -101,9 +109,12 @@ class AuthController extends Controller
     }
     public function logout()
     {
-        JWTAuth::logout(true);
-
-        return response()->json(['message' => 'Successfully logged out']);
+        try {
+            JWTAuth::parseToken()->invalidate(JWTAuth::getToken());
+            return response()->json(['message' => 'Successfully logged out']);
+        } catch (JWTException $e) {
+            return response()->json(['error' => 'Failed to logout, please try again.'], 500);
+        }
     }
     public function refresh(Request $request)
     {
@@ -114,7 +125,7 @@ class AuthController extends Controller
 
             JWTAuth::invalidate($request->bearerToken());
             $token = JWTAuth::fromUser($user);
-            return $this->respondWithToken($token, $this->refreshToken());
+            return $this->respondWithToken($token, $this->refreshToken($user));
         } catch (Throwable $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }
@@ -143,7 +154,7 @@ class AuthController extends Controller
                     $user->forceFill([
                         'password' => Hash::make($password),
                     ])->save();
-
+                    JWTAuth::invalidate(JWTAuth::fromUser($user));
                     event(new PasswordReset($user));
                 }
             );
