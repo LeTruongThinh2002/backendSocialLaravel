@@ -10,6 +10,12 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
 // })->middleware('auth:sanctum');
+Route::options('{any}', function (Request $request) {
+    return response()->json([], 200)
+        ->header('Access-Control-Allow-Origin', 'http://localhost:3000')
+        ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->header('Access-Control-Allow-Headers', 'Content-Type, X-Auth-Token, Origin, Authorization');
+})->where('any', '.*');
 Route::group([
     'middleware' => 'api',
     'prefix' => 'auth'
