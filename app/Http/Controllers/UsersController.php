@@ -39,7 +39,13 @@ class UsersController extends Controller
      */
     public function getUser(User $user)
     {
-        return new ProfileResource($user);
+        try {
+            return new ProfileResource($user);
+        } catch (Throwable $error) {
+            return response()->json([
+                'message' => $error->getMessage()
+            ], 500);
+        }
     }
 
     /**
