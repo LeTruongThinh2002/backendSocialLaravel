@@ -25,7 +25,7 @@ class AuthController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login', 'register', 'forgotPassword', 'resetPassword', 'showResetForm']]);
+        $this->middleware('auth:api', ['except' => ['login', 'refresh', 'register', 'forgotPassword', 'resetPassword', 'showResetForm', 'refresh']]);
     }
 
     public function login(LoginRequest $request)
@@ -116,16 +116,26 @@ class AuthController extends Controller
             return response()->json(['error' => 'Failed to logout, please try again.'], 500);
         }
     }
+
     public function refresh(Request $request)
     {
         try {
             $refreshToken = $request->input('refresh_token');
-            JWTAuth::setToken($refreshToken);
-            $user = JWTAuth::parseToken()->authenticate();
+            if (!$refreshToken) {
+                return response()->json(['error' => 'Refresh token not provided'], 400);
+            }
+            $payload = JWTAuth::getJWTProvider()->decode($refreshToken);
+            // Retrieve the user by the ID in the payload
+            $user = User::find($payload['id']);
 
-            JWTAuth::invalidate($request->bearerToken());
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+
+            // Generate a new token
             $token = JWTAuth::fromUser($user);
-            return $this->respondWithToken($token, $this->refreshToken($user));
+
+            return $this->respondWithToken($token);
         } catch (Throwable $error) {
             return response()->json(['error' => $error->getMessage()], 500);
         }
@@ -154,7 +164,7 @@ class AuthController extends Controller
                     $user->forceFill([
                         'password' => Hash::make($password),
                     ])->save();
-                    JWTAuth::invalidate(JWTAuth::fromUser($user));
+
                     event(new PasswordReset($user));
                 }
             );

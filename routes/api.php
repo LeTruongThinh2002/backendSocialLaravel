@@ -27,7 +27,7 @@ Route::group([
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api')->name('logout');
     Route::post('refresh', [AuthController::class, 'refresh'])->name('refresh');
     Route::post('verify', [AuthController::class, 'resendVerificationEmail'])->name('verify');
-    Route::get('email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    Route::post('email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
         $request->fulfill();
         return response()->json(['message' => 'Email verified.'], 200);
     })->middleware(['auth', 'signed'])->name('verification.verify');
