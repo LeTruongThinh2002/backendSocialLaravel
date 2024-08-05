@@ -143,7 +143,6 @@ return [
     | present in the payload.
     |
     */
-
     'required_claims' => [
         'iss',
         'iat',
