@@ -37,7 +37,7 @@ class UsersController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function getUser(User $user)
+    public function getProfile(User $user)
     {
         try {
             return new ProfileResource($user);
@@ -132,6 +132,8 @@ class UsersController extends Controller
             $user->update($request->only([
                 'first_name',
                 'last_name',
+                'avatar',
+                'background',
                 'date_of_birth',
                 'country'
             ]));

@@ -4,9 +4,8 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Carbon;
 
-class ProfileResource extends JsonResource
+class UserResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -23,17 +22,11 @@ class ProfileResource extends JsonResource
             "email_verify_at" => $this->email_verified_at
                 ? $this->email_verified_at->format('Y-m-d H:i:s')
                 : null,
-            "date_of_birth" => $this->date_of_birth,
             "avatar" => $this->avatar,
             "background" => $this->background,
-            "country" => $this->country,
             "userFollow" => $this->userFollow,
-            "userFollower" => $this->userFollower,
             "friends" => $this->friends,
             "userBlock" => $this->userBlock,
-            "countPost" => $this->posts->count(),
-            "created_at" => $this->created_at->format('Y-m-d H:i:s'),
-            "updated_at" => $this->updated_at->format('Y-m-d H:i:s'),
         ];
     }
 }
