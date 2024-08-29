@@ -16,6 +16,7 @@ use App\Http\Requests\RegisterRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use Illuminate\Auth\Events\Registered;
 use App\Http\Resources\ProfileResource;
+use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
 use Tymon\JWTAuth\Exceptions\JWTException;
@@ -102,10 +103,10 @@ class AuthController extends Controller
         ];
         return JWTAuth::getJWTProvider()->encode($access);
     }
-    public function profile()
+    public function fetchProfile()
     {
 
-        return response()->json(new ProfileResource(JWTAuth::user()));
+        return response()->json(new UserResource(JWTAuth::user()));
     }
     public function logout()
     {
@@ -130,6 +131,10 @@ class AuthController extends Controller
 
             if (!$user) {
                 return response()->json(['error' => 'User not found'], 404);
+            }
+
+            if ($user->remember_token !== $refreshToken) {
+                return response()->json(['error' => 'Invalid refresh token'], 401);
             }
 
             // Generate a new token
@@ -178,13 +183,16 @@ class AuthController extends Controller
             return response()->json(['error' => $error->getMessage()], 500);
         }
     }
-    public function showResetForm($token, Request $request)
-    {
-        return response()->json(['token' => $token, 'email' => $request->query('email')]);
-    }
 
     protected function respondWithToken($token, $refreshToken = null)
     {
+        if ($refreshToken) {
+            $user = JWTAuth::user();
+            $user->update([
+                'remember_token' => $refreshToken
+            ]);
+        }
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',

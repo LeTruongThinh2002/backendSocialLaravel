@@ -27,10 +27,12 @@ class UserFactory extends Factory
             'first_name' => fake()->name(),
             'last_name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verify_at' => now(),
-            'date_of_birth' => now(),
             'password' => static::$password ??= Hash::make('password'),
-            // 'remember_token' => Str::random(10),
+            'country' => fake()->country(),
+            'date_of_birth' => now(),
+            'email_verified_at' => now(),
+            'avatar' => fake()->imageUrl(),
+            'background' => fake()->imageUrl(),
         ];
     }
 

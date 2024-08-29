@@ -17,7 +17,9 @@ class NewsFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'description' => $this->faker->text(100),
+            'media' => $this->faker->imageUrl(),
+            'user_id' => \App\Models\User::inRandomOrder()->first()->id
         ];
     }
 }

@@ -25,6 +25,8 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
         'email_verified_at',
         'date_of_birth',
         'country',
+        'avatar',
+        'background'
     ];
     protected $hidden = [
         'password',
@@ -55,4 +57,47 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
     {
         $this->notify(new VerifyEmail);
     }
+
+    public function userFollow()
+    {
+        return $this->belongsToMany(User::class, 'user_follow', 'user_id', 'user_following')->pluck('user_following');
+    }
+
+    public function userFollower()
+    {
+        return $this->belongsToMany(User::class, 'user_follow', 'user_following', 'user_id')->pluck('user_id');
+    }
+
+    public function friends()
+    {
+        $followings = $this->userFollow();
+        return $this->userFollower()->whereIn('user_id', $followings)->pluck('user_id');
+    }
+
+    public function userBlock()
+    {
+        return $this->belongsToMany(User::class, 'user_block', 'user_id', 'user_blocked')->pluck('user_blocked');
+    }
+
+
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    public function chats()
+    {
+        return $this->hasMany(Chat::class);
+    }
+
+    public function news()
+    {
+        return $this->hasMany(news::class);
+    }
+
+    public function reels()
+    {
+        return $this->hasMany(Reel::class);
+    }
+
 }

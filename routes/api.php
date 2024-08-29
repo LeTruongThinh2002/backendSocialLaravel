@@ -23,7 +23,7 @@ Route::group([
     Route::post('login', [AuthController::class, 'login'])->name('login');
     Route::post('register', [AuthController::class, 'register'])->name('register');
 
-    Route::get('profile', [AuthController::class, 'profile'])->middleware('auth:api')->name('profile');
+    Route::get('fetchProfile', [AuthController::class, 'fetchProfile'])->middleware('auth:api')->name('fetchProfile');
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api')->name('logout');
     Route::post('refresh', [AuthController::class, 'refresh'])->name('refresh');
     Route::post('verify', [AuthController::class, 'resendVerificationEmail'])->name('verify');
@@ -35,7 +35,7 @@ Route::group([
     Route::post('/password/reset/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
     Route::post('resetPassword', [AuthController::class, 'resetPassword'])->name('resetPassword');
 });
-Route::get('/users/{user}', [UsersController::class, 'getUser'])->name('users.getUser');
+Route::get('/users/{user}', [UsersController::class, 'getProfile'])->name('users.getProfile');
 
 Route::put('/users/{user}', [UsersController::class, 'update'])->middleware(['auth:api'])->name('users.update');
 Route::delete('/users/{user}', [UsersController::class, 'destroy'])->middleware(['auth:api'])->name('users.destroy');

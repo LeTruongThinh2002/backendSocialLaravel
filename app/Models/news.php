@@ -5,16 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class News extends Model
+class news extends Model
 {
     use HasFactory;
     protected $table = 'news';
-    public function UserLike()
+    public function newsUser()
     {
-        return $this->hasMany(User::class, 'news_likes');
+        return $this->belongsTo(User::class);
     }
-    public function Author()
-    {
-        return $this->belongsTo(User::class, 'users_news');
-    }
+
 }

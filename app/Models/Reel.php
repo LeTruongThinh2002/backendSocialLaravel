@@ -9,16 +9,16 @@ class Reel extends Model
 {
     use HasFactory;
     protected $table = 'reels';
-    public function UserLike()
+    public function reelsUser()
     {
-        return $this->belongsToMany(User::class, 'reels_likes');
+        return $this->belongsTo(User::class);
     }
-    public function Author()
+    public function reelsLike()
     {
-        return $this->belongsTo(User::class, 'users_reels');
+        return $this->hasMany('\App\Models\ReelsLike', 'reels_id');
     }
-    public function Comments()
+    public function reelsComments()
     {
-        return $this->hasMany(ReelComment::class);
+        return $this->hasMany(ReelsComment::class);
     }
 }

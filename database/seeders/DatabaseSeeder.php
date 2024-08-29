@@ -2,11 +2,18 @@
 
 namespace Database\Seeders;
 
+use App\Models\News;
+use App\Models\Post;
+use App\Models\PostsComment;
+use App\Models\Reel;
+use App\Models\ReelsComment;
 use App\Models\User;
 use App\Models\users;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Faker\Factory as Faker;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,15 +22,84 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        User::factory(20)->create();
+        Post::factory(10)->create();
+        Reel::factory(10)->create();
+        News::factory(10)->create();
 
-        User::factory()->create([
-            'first_name' => 'User',
-            'last_name' => 'User',
-            'email' => 'test@example.com',
-            'password' => Hash::make('12345678'),
-            'date_of_birth' => '2015-10-10',
-            'country' => 'US',
-        ]);
+        $faker = Faker::create();
+        $posts = Post::all();
+        $reels = Reel::all();
+        $users = User::all();
+        foreach ($users as $user) {
+            DB::table('user_follow')->insert([
+                [
+                    'user_id' => $user->id,
+                    'user_following' => User::where('id', '!=', $user->id)->inRandomOrder()->first()->id,
+                ],
+            ]);
+        }
+
+        foreach ($posts as $post) {
+            DB::table('posts_media')->insert([
+                [
+                    'post_id' => $post->id,
+                    'media' => $faker->imageUrl(),
+                ],
+                [
+                    'post_id' => $post->id,
+                    'media' => $faker->imageUrl(),
+                ],
+            ]);
+            DB::table('posts_like')->insert([
+                [
+                    'post_id' => $post->id,
+                    'user_id' => User::inRandomOrder()->first()->id,
+                ],
+            ]);
+            PostsComment::insert([
+                [
+                    'post_id' => $post->id,
+                    'user_id' => User::inRandomOrder()->first()->id,
+                    'comment' => $faker->text(100),
+                ],
+                [
+                    'post_id' => $post->id,
+                    'user_id' => User::inRandomOrder()->first()->id,
+                    'comment' => $faker->text(100),
+                ],
+                [
+                    'post_id' => $post->id,
+                    'user_id' => User::inRandomOrder()->first()->id,
+                    'comment' => $faker->text(100),
+                ],
+            ]);
+        }
+
+        foreach ($reels as $reel) {
+            DB::table('reels_like')->insert([
+                [
+                    'reels_id' => $reel->id,
+                    'user_id' => User::inRandomOrder()->first()->id,
+                ],
+            ]);
+            ReelsComment::insert([
+                [
+                    'reels_id' => $reel->id,
+                    'user_id' => User::inRandomOrder()->first()->id,
+                    'comment' => $faker->text(100),
+                ],
+                [
+                    'reels_id' => $reel->id,
+                    'user_id' => User::inRandomOrder()->first()->id,
+                    'comment' => $faker->text(100),
+                ],
+                [
+                    'reels_id' => $reel->id,
+                    'user_id' => User::inRandomOrder()->first()->id,
+                    'comment' => $faker->text(100),
+                ],
+            ]);
+        }
     }
 }
