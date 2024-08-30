@@ -14,6 +14,9 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $userFollowIds = $this->userFollow->pluck('id')->toArray();
+        $userFollowerIds = $this->userFollower->pluck('id')->toArray();
+        $friends = array_intersect($userFollowIds, $userFollowerIds);
         return [
             "id" => $this->id,
             "first_name" => $this->first_name,
@@ -24,9 +27,9 @@ class UserResource extends JsonResource
                 : null,
             "avatar" => $this->avatar,
             "background" => $this->background,
-            "userFollow" => $this->userFollow,
-            "friends" => $this->friends,
-            "userBlock" => $this->userBlock,
+            "userFollow" => $this->userFollow->pluck('id'),
+            "friends" => $friends,
+            "userBlock" => $this->userBlock->pluck('id'),
         ];
     }
 }

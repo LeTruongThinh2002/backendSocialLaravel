@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Carbon;
@@ -15,6 +16,11 @@ class ProfileResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+
+        $userFollowIds = $this->userFollow->pluck('id')->toArray();
+        $userFollowerIds = $this->userFollower->pluck('id')->toArray();
+        $friends = array_intersect($userFollowIds, $userFollowerIds);
+
         return [
             "id" => $this->id,
             "first_name" => $this->first_name,
@@ -27,13 +33,14 @@ class ProfileResource extends JsonResource
             "avatar" => $this->avatar,
             "background" => $this->background,
             "country" => $this->country,
-            "userFollow" => $this->userFollow,
-            "userFollower" => $this->userFollower,
-            "friends" => $this->friends,
-            "userBlock" => $this->userBlock,
+            "userFollow" => $this->userFollow->pluck('id'),
+            "userFollower" => $this->userFollower->pluck('id'),
+            "friends" => $friends,
+            "userBlock" => $this->userBlock->pluck('id'),
             "countPost" => $this->posts->count(),
             "created_at" => $this->created_at->format('Y-m-d H:i:s'),
             "updated_at" => $this->updated_at->format('Y-m-d H:i:s'),
         ];
     }
+
 }
