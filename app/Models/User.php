@@ -60,24 +60,19 @@ class User extends Authenticatable implements JWTSubject, MustVerifyEmail
 
     public function userFollow()
     {
-        return $this->belongsToMany(User::class, 'user_follow', 'user_id', 'user_following')->pluck('user_following');
+        return $this->belongsToMany(User::class, 'user_follow', 'user_id', 'user_following');
     }
 
     public function userFollower()
     {
-        return $this->belongsToMany(User::class, 'user_follow', 'user_following', 'user_id')->pluck('user_id');
-    }
-
-    public function friends()
-    {
-        $followings = $this->userFollow();
-        return $this->userFollower()->whereIn('user_id', $followings)->pluck('user_id');
+        return $this->belongsToMany(User::class, 'user_follow', 'user_following');
     }
 
     public function userBlock()
     {
-        return $this->belongsToMany(User::class, 'user_block', 'user_id', 'user_blocked')->pluck('user_blocked');
+        return $this->belongsToMany(User::class, 'user_block', 'user_id', 'user_blocked');
     }
+
 
 
     public function posts()
