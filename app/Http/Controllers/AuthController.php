@@ -64,11 +64,15 @@ class AuthController extends Controller
             if (User::where('email', $request['email'])->exists()) {
                 return response()->json(['message' => 'User already exists'], 409);
             }
-            $user = User::create(
-                $requestData
-            );
+            $user = User::create($requestData);
+
             event(new Registered($user));
             $token = JWTAuth::fromUser($user);
+            // Đặt token vào request để JWTAuth có thể nhận diện user
+            $request->headers->set('Authorization', 'Bearer ' . $token);
+
+            // Refresh để đảm bảo JWTAuth nhận diện user mới
+            JWTAuth::setToken($token)->toUser();
             return $this->respondWithToken($token, $this->refreshToken($user));
         } catch (Throwable $error) {
             Log::error('Registration error: ' . $error->getMessage());
@@ -192,12 +196,14 @@ class AuthController extends Controller
 
     protected function respondWithToken($token, $refreshToken = null)
     {
-        if ($refreshToken) {
-            $user = JWTAuth::user();
-            $user->update([
+        $user = JWTAuth::user();
+        if ($refreshToken && $user) {
+            $user->forceFill([
                 'remember_token' => $refreshToken
-            ]);
+            ])->save();
         }
+        Log::debug($user);
+        Log::debug($refreshToken);
 
         return response()->json([
             'access_token' => $token,
