@@ -11,7 +11,7 @@ class news extends Model
     protected $table = 'news';
     public function newsUser()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
 }
