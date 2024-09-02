@@ -9,22 +9,26 @@ class Post extends Model
 {
     use HasFactory;
     protected $table = 'posts';
+    protected $fillable = [
+        'user_id',
+        'description',
+    ];
     public function postsUser()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
     public function postsMedia()
     {
-        return $this->hasMany('App\Models\PostsMedia', 'post_id');
+        return $this->hasMany(PostsMedia::class, 'post_id');
     }
 
     public function postsComment()
     {
-        return $this->hasMany('App\Models\PostsComment', 'post_id');
+        return $this->hasMany(PostsComment::class, 'post_id');
     }
 
     public function postsLike()
     {
-        return $this->hasMany('App\Models\PostsLike', 'post_id');
+        return $this->belongsToMany(User::class, 'posts_like', 'post_id', 'user_id');
     }
 }

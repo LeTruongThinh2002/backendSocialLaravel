@@ -11,11 +11,11 @@ class Reel extends Model
     protected $table = 'reels';
     public function reelsUser()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
     public function reelsLike()
     {
-        return $this->hasMany('\App\Models\ReelsLike', 'reels_id');
+        return $this->belongsToMany(User::class, 'reels_like', 'reels_id', 'user_id');
     }
     public function reelsComments()
     {
