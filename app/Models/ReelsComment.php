@@ -12,12 +12,12 @@ class ReelsComment extends Model
 
     public function commentUser()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function commentInReels()
     {
-        return $this->belongsTo(Reel::class);
+        return $this->belongsTo(Reel::class, 'reels_id', 'id');
     }
 
     public function commentReply()
