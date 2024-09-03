@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\PostsCommentController;
+use App\Http\Controllers\ReelCommentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -7,6 +9,7 @@ use App\Http\Controllers\UsersController;
 use App\Http\Controllers\PostsController;
 use App\Http\Controllers\ReelsController;
 use App\Http\Controllers\NewsController;
+use App\Http\Controllers\PostCommentController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 
@@ -129,6 +132,34 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('/news/{getUser}/user', [NewsController::class, 'getUserNews'])
         ->middleware(\App\Http\Middleware\CheckUserBlock::class)
         ->name('news.getUserNews');
+});
+
+Route::group(['middleware' => 'auth:api'], function () {
+    Route::get('/posts/{post}/comments', [PostCommentController::class, 'index'])->middleware(\App\Http\Middleware\CheckUserBlock::class)->name('posts.comments.index');
+    // Tạo comment
+    Route::post('/posts/comments', [PostCommentController::class, 'store'])->middleware(\App\Http\Middleware\CheckUserBlock::class)->name('posts.comments.store');
+    // Lấy 1 comment
+    // Route::get('/posts/comments/{comment}', [PostCommentController::class, 'show'])->name('posts.comments.show');
+    // Like comment
+    Route::post('/posts/comments/like/{comment}', [PostCommentController::class, 'like'])->middleware(\App\Http\Middleware\CheckUserBlock::class)->name('posts.comments.like');
+    // Cập nhật comment
+    Route::put('/posts/comments/{comment}', [PostCommentController::class, 'update'])->name('posts.comments.update');
+    // Xóa comment
+    Route::delete('/posts/comments/{comment}', [PostCommentController::class, 'destroy'])->name('posts.comments.destroy');
+});
+
+// Routes for ReelCommentController
+Route::group(['middleware' => 'auth:api'], function () {
+    // Lấy comment của reel
+    Route::get('/reels/{reel}/comments', [ReelCommentController::class, 'index'])->middleware(\App\Http\Middleware\CheckUserBlock::class)->name('reels.comments.index');
+    // Tạo comment
+    Route::post('/reels/comments', [ReelCommentController::class, 'store'])->middleware(\App\Http\Middleware\CheckUserBlock::class)->name('reels.comments.store');
+    // Like comment
+    Route::post('/reels/comments/like/{comment}', [ReelCommentController::class, 'like'])->middleware(\App\Http\Middleware\CheckUserBlock::class)->name('reels.comments.like');
+    // Cập nhật comment
+    Route::put('/reels/comments/{comment}', [ReelCommentController::class, 'update'])->name('reels.comments.update');
+    // Xóa comment
+    Route::delete('/reels/comments/{comment}', [ReelCommentController::class, 'destroy'])->name('reels.comments.destroy');
 });
 
 
