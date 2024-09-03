@@ -17,7 +17,7 @@ class PostsResource extends JsonResource
         return [
             'id' => $this->id,
             'user' => $this->postsUser,
-            'comments' => $this->postsComment,
+            'comments' => $this->postsComment->count(),
             'description' => $this->description,
             'media' => $this->postsMedia->pluck('media'), // Lấy danh sách các liên kết media
             'created_at' => $this->created_at,
