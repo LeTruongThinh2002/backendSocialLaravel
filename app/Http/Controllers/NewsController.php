@@ -27,7 +27,7 @@ class NewsController extends Controller
                 ->where('user_id', $user->id);
         })
             ->orderBy('created_at', 'desc')
-            ->paginate(5);
+            ->get();
 
         return NewsResource::collection($news);
     }
@@ -83,17 +83,59 @@ class NewsController extends Controller
     public function latestNews()
     {
         $user = JWTAuth::user();
+        $threeDaysAgo = Carbon::now()->subDays(3);
 
-        $news = News::whereIn('user_id', function ($query) use ($user) {
-            $query->select('user_following')
-                ->from('user_follow')
-                ->where('user_id', $user->id);
-        })
-            ->where('created_at', '>=', Carbon::now()->subDays(3))
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $groupedNews = News::query()
+            // lấy thông tin user
+            ->join('users', 'news.user_id', '=', 'users.id')
+            // chỉ lấy news từ những người dùng đang follow
+            ->joinSub(
+                $user->userFollow(),
+                'user_follow',
+                function ($join) {
+                    $join->on('news.user_id', '=', 'user_follow.id');
+                }
+            )
+            // chỉ lấy news trong 3 ngày gần đây nhất
+            ->where('news.created_at', '<=', $threeDaysAgo)
+            // lấy thông tin cần thiết từ user và news
+            ->select(
+                'users.id as user_id',
+                'users.first_name',
+                'users.last_name',
+                'users.avatar',
+                'news.id as news_id',
+                'news.description',
+                'news.media',
+                'news.created_at'
+            )
+            // sắp xếp theo ngày tạo news
+            ->orderBy('news.created_at', 'desc')
+            ->get()
+            // nhóm theo user_id
+            ->groupBy('user_id')
+            ->map(function ($group) {
+                return [
+                    'user' => [
+                        'id' => $group->first()->user_id,
+                        'first_name' => $group->first()->first_name,
+                        'last_name' => $group->first()->last_name,
+                        'avatar' => $group->first()->avatar,
+                    ],
+                    'news' => $group->map(function ($item) {
+                        return [
+                            'id' => $item->news_id,
+                            'description' => $item->description,
+                            'media' => $item->media,
+                            'created_at' => $item->created_at,
+                        ];
+                    }),
+                ];
+            })
+            ->values()
+            ->all();
 
-        return NewsResource::collection($news);
+        return response()->json($groupedNews);
     }
 
     // Lấy tất cả news của người dùng chỉ định
