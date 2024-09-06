@@ -113,8 +113,6 @@ Route::group(['middleware' => 'auth:api'], function () {
 
 // Routes for NewsController
 Route::group(['middleware' => 'auth:api'], function () {
-    // Lấy tin tức mới nhất
-    Route::get('/news', [NewsController::class, 'index'])->name('news.index');
     // Tạo tin tức mới
     Route::post('/news', [NewsController::class, 'store'])->name('news.store');
     // Lấy tin tức mới nhất từ user đang follow
