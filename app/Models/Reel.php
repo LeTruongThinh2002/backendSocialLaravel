@@ -17,7 +17,7 @@ class Reel extends Model
     {
         return $this->belongsToMany(User::class, 'reels_like', 'reels_id', 'user_id');
     }
-    public function reelsComments()
+    public function reelsComment()
     {
         return $this->hasMany(ReelsComment::class);
     }
