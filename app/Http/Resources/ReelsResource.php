@@ -18,8 +18,9 @@ class ReelsResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'user' => $this->reelsUser,
-            // 'comments' => $this->postsComment,
+            'user' => $this->reelsUser->only(['id', 'first_name', 'last_name', 'avatar']),
+            'comments' => $this->reelsComment->count(),
+            'like' => $this->reelsLike->pluck('id'),
             'description' => $this->description,
             'media' => $this->media, // Lấy danh sách các liên kết media
             'created_at' => $this->created_at,
