@@ -135,7 +135,7 @@ class PostsController extends Controller
     // Lấy tất cả bài viết của người dùng chỉ định
     public function getUserPosts(User $getUser)
     {
-        $posts = $getUser->posts
+        $posts = $getUser->posts()
             ->orderBy('created_at', 'desc')
             ->get();
 
