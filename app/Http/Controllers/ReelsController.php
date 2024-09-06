@@ -86,7 +86,7 @@ class ReelsController extends Controller
     // Lấy tất cả reels của người dùng chỉ định
     public function getUserReels(User $getUser)
     {
-        $reels = $getUser->reels
+        $reels = $getUser->reels()
             ->orderBy('created_at', 'desc')
             ->get();
 
