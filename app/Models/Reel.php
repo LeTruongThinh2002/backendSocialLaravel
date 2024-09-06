@@ -19,6 +19,6 @@ class Reel extends Model
     }
     public function reelsComment()
     {
-        return $this->hasMany(ReelsComment::class);
+        return $this->hasMany(ReelsComment::class, 'reels_id');
     }
 }
