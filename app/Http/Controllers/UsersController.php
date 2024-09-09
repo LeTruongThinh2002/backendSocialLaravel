@@ -48,6 +48,31 @@ class UsersController extends Controller
         }
     }
 
+
+    public function toggleBlockUser(User $user)
+    {
+        try {
+            $authUser = JWTAuth::user();
+            $isBlocked = $authUser->userBlock()->where('id', $user->id)->exists();
+
+            if ($isBlocked) {
+                $authUser->userBlock()->detach($user->id);
+                $message = 'User unblocked successfully.';
+            } else {
+                $authUser->userBlock()->attach($user->id, ['created_at' => now()]);
+                $message = 'User blocked successfully.';
+            }
+
+            return response()->json(['message' => $message], 200);
+        } catch (Throwable $error) {
+            Log::error('Toggle block user error: ' . $error->getMessage());
+            return response()->json([
+                'message' => 'An error occurred while toggling user block status.',
+                'error' => $error->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Update the email resource in storage.
      */
