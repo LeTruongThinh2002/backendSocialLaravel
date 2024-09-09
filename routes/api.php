@@ -1,9 +1,15 @@
 <?php
 
+use App\Http\Controllers\PostsCommentController;
+use App\Http\Controllers\ReelCommentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UsersController;
+use App\Http\Controllers\PostsController;
+use App\Http\Controllers\ReelsController;
+use App\Http\Controllers\NewsController;
+use App\Http\Controllers\PostCommentController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 
@@ -12,7 +18,7 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 // })->middleware('auth:sanctum');
 Route::options('{any}', function (Request $request) {
     return response()->json([], 200)
-        ->header('Access-Control-Allow-Origin', 'http://localhost:3000')
+        ->header('Access-Control-Allow-Origin', '*')
         ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
         ->header('Access-Control-Allow-Headers', 'Content-Type, X-Auth-Token, Origin, Authorization');
 })->where('any', '.*');
@@ -20,29 +26,31 @@ Route::group([
     'middleware' => 'api',
     'prefix' => 'auth'
 ], function ($router) {
+    // Đăng nhập
     Route::post('login', [AuthController::class, 'login'])->name('login');
+    // Đăng ký
     Route::post('register', [AuthController::class, 'register'])->name('register');
-
+    // Lấy thông tin user đăng nhập bằng jwt token  
     Route::get('fetchProfile', [AuthController::class, 'fetchProfile'])->middleware('auth:api')->name('fetchProfile');
+    // Đăng xuất    
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api')->name('logout');
+    // Refresh token
     Route::post('refresh', [AuthController::class, 'refresh'])->name('refresh');
+    // Gửi lại email xác nhận cho user đang đăng nhập   
     Route::post('verify', [AuthController::class, 'resendVerificationEmail'])->name('verify');
+    // Xác nhận email
     Route::post('email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
         $request->fulfill();
         return response()->json(['message' => 'Email verified.'], 200);
     })->middleware(['auth', 'signed'])->name('verification.verify');
+    // Quên mật khẩu
     Route::post('forgotPassword', [AuthController::class, 'forgotPassword'])->name('forgotPassword');
+    // Reset mật khẩu
     Route::post('/password/reset/{token}', [AuthController::class, 'showResetForm'])->name('password.reset');
+    // Cập nhật mật khẩu
     Route::post('resetPassword', [AuthController::class, 'resetPassword'])->name('resetPassword');
 });
-Route::get('/users/{user}', [UsersController::class, 'getProfile'])->name('users.getProfile');
 
-<<<<<<< Updated upstream
-Route::put('/users/{user}', [UsersController::class, 'update'])->middleware(['auth:api'])->name('users.update');
-Route::delete('/users/{user}', [UsersController::class, 'destroy'])->middleware(['auth:api'])->name('users.destroy');
-Route::put('/users/changePwd/{user}', [UsersController::class, 'changePassword'])->middleware(['auth:api'])->name('users.changePwd');
-Route::put('/users/changeEmail/{user}', [UsersController::class, 'changeEmail'])->middleware(['auth:api'])->name('users.changeEmail');
-=======
 // Route cho UsersController
 Route::group(['middleware' => 'auth:api'], function () {
     // Lấy thông tin user chỉ định
@@ -153,6 +161,5 @@ Route::group(['middleware' => 'auth:api'], function () {
     // Xóa comment
     Route::delete('/reels/comments/{comment}', [ReelCommentController::class, 'destroy'])->name('reels.comments.destroy');
 });
->>>>>>> Stashed changes
 
 

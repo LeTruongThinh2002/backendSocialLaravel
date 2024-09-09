@@ -15,6 +15,8 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Http\Requests\ChangeEmailRequest;
 use App\Http\Requests\UpdateusersRequest;
 use App\Http\Requests\ChangePasswordRequest;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class UsersController extends Controller
 {
@@ -42,8 +44,9 @@ class UsersController extends Controller
         try {
             return new ProfileResource($user);
         } catch (Throwable $error) {
+            Log::error('Get profile error: ' . $error->getMessage());
             return response()->json([
-                'message' => $error->getMessage()
+                'message' => 'An error occurred while fetching the profile.'
             ], 500);
         }
     }
@@ -98,8 +101,9 @@ class UsersController extends Controller
             ], 200);
 
         } catch (Throwable $error) {
+            Log::error('Change email error: ' . $error->getMessage());
             return response()->json([
-                'message' => 'Error changing email.',
+                'message' => 'An error occurred while changing the email.',
                 'error' => $error->getMessage()
             ], 500);
         }
@@ -121,11 +125,6 @@ class UsersController extends Controller
                     'message' => 'Current password is incorrect.'
                 ], 401); // Unauthorized
             }
-            if ($request->new_password != $request->confirm_password) {
-                return response()->json([
-                    'message' => 'New password and confirmation password do not match.'
-                ], 422); // Unprocessable Entity
-            }
             $user->update([
                 'password' => Hash::make($request->new_password)
             ]);
@@ -136,8 +135,9 @@ class UsersController extends Controller
             ], 200);
 
         } catch (Throwable $error) {
+            Log::error('Change password error: ' . $error->getMessage());
             return response()->json([
-                'message' => 'Error changing password.',
+                'message' => 'An error occurred while changing the password.',
                 'error' => $error->getMessage()
             ], 500);
         }
@@ -152,7 +152,7 @@ class UsersController extends Controller
             if (JWTAuth::user()->id != $user->id) {
                 return response()->json([
                     'message' => 'Unauthorized to update this user.'
-                ], 401);  // Unauthorized
+                ], 403);  // Unauthorized
             }
             $user->update($request->only([
                 'first_name',
@@ -167,8 +167,9 @@ class UsersController extends Controller
             ], 200);
 
         } catch (Throwable $error) {
+            Log::error('Update user error: ' . $error->getMessage());
             return response()->json([
-                'message' => 'Error updating user.',
+                'message' => 'An error occurred while updating the user.',
                 'error' => $error->getMessage()
             ], 500);
 
@@ -183,18 +184,21 @@ class UsersController extends Controller
         try {
             if (JWTAuth::user()->id != $user->id) {
                 return response()->json([
-                    'message' => 'Unauthorized to update this user.'
-                ], 401);  // Unauthorized
+                    'message' => 'Unauthorized to delete this user.'
+                ], 403);
             }
             $user->deleteOrFail();
             return response()->json([
                 'message' => 'User deleted successfully.'
             ], 200);
-
-        } catch (Throwable $error) {
+        } catch (ModelNotFoundException $e) {
             return response()->json([
-                'message' => 'Error deleting user.',
-                'error' => $error->getMessage()
+                'message' => 'User not found.'
+            ], 404);
+        } catch (Throwable $error) {
+            Log::error('Delete user error: ' . $error->getMessage());
+            return response()->json([
+                'message' => 'An error occurred while deleting the user.'
             ], 500);
         }
     }

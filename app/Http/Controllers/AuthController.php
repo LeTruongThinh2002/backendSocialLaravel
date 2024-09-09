@@ -20,7 +20,7 @@ use App\Http\Resources\UserResource;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
 use Tymon\JWTAuth\Exceptions\JWTException;
-
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -43,7 +43,8 @@ class AuthController extends Controller
 
             return $this->respondWithToken($token, $this->refreshToken(JWTAuth::user()));
         } catch (Throwable $error) {
-            return response()->json(['error' => $error->getMessage()], 500);
+            Log::error('Login error: ' . $error->getMessage());
+            return response()->json(['error' => 'An error occurred during login. Please try again.'], 500);
         }
 
     }
@@ -63,14 +64,19 @@ class AuthController extends Controller
             if (User::where('email', $request['email'])->exists()) {
                 return response()->json(['message' => 'User already exists'], 409);
             }
-            $user = User::create(
-                $requestData
-            );
+            $user = User::create($requestData);
+
             event(new Registered($user));
             $token = JWTAuth::fromUser($user);
+            // Đặt token vào request để JWTAuth có thể nhận diện user
+            $request->headers->set('Authorization', 'Bearer ' . $token);
+
+            // Refresh để đảm bảo JWTAuth nhận diện user mới
+            JWTAuth::setToken($token)->toUser();
             return $this->respondWithToken($token, $this->refreshToken($user));
         } catch (Throwable $error) {
-            return response()->json(['error' => $error->getMessage()], 500);
+            Log::error('Registration error: ' . $error->getMessage());
+            return response()->json(['error' => 'An error occurred during registration. Please try again.'], 500);
         }
     }
     public function resendVerificationEmail()
@@ -90,7 +96,8 @@ class AuthController extends Controller
                 'message' => 'Verified email has been send.'
             ]);
         } catch (Throwable $error) {
-            return response()->json(['error' => $error->getMessage()], 500);
+            Log::error('Email verification error: ' . $error->getMessage());
+            return response()->json(['error' => 'Failed to send verification email. Please try again later.'], 500);
         }
     }
 
@@ -142,7 +149,8 @@ class AuthController extends Controller
 
             return $this->respondWithToken($token);
         } catch (Throwable $error) {
-            return response()->json(['error' => $error->getMessage()], 500);
+            Log::error('Token refresh error: ' . $error->getMessage());
+            return response()->json(['error' => 'Failed to refresh token. Please log in again.'], 500);
         }
     }
     public function forgotPassword(ForgotPasswordRequest $request)
@@ -156,7 +164,8 @@ class AuthController extends Controller
 
             return response()->json(['error' => __($status)], 400);
         } catch (Throwable $error) {
-            return response()->json(['error' => $error->getMessage()], 500);
+            Log::error('Forgot password error: ' . $error->getMessage());
+            return response()->json(['error' => 'An error occurred while processing your request. Please try again later.'], 500);
         }
     }
 
@@ -180,18 +189,21 @@ class AuthController extends Controller
 
             return response()->json(['error' => [__($status)]], 400);
         } catch (Throwable $error) {
-            return response()->json(['error' => $error->getMessage()], 500);
+            Log::error('Password reset error: ' . $error->getMessage());
+            return response()->json(['error' => 'An error occurred while resetting your password. Please try again.'], 500);
         }
     }
 
     protected function respondWithToken($token, $refreshToken = null)
     {
-        if ($refreshToken) {
-            $user = JWTAuth::user();
-            $user->update([
+        $user = JWTAuth::user();
+        if ($refreshToken && $user) {
+            $user->forceFill([
                 'remember_token' => $refreshToken
-            ]);
+            ])->save();
         }
+        Log::debug($user);
+        Log::debug($refreshToken);
 
         return response()->json([
             'access_token' => $token,

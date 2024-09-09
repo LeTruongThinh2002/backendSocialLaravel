@@ -13,17 +13,17 @@ class PostsComment extends Model
 
     public function commentUser()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function commentInPosts()
     {
-        return $this->belongsTo(Post::class);
+        return $this->belongsTo(Post::class, 'post_id', 'id');
     }
 
     public function commentReply()
     {
-        return $this->hasMany(PostsComment::class, 'parent_comment_id');
+        return $this->hasMany(PostsComment::class, 'parent_comment_id', 'id');
     }
 
     public function commentLike()
