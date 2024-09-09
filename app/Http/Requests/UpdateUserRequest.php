@@ -12,6 +12,8 @@ class UpdateUserRequest extends FormRequest
         return [
             'first_name' => ['required', 'max:255'],
             'last_name' => ['required', 'max:255'],
+            'avatar' => ['required', 'max:255'],
+            'background' => ['required', 'max:255'],
             'date_of_birth' => ['required', 'date_format:Y-m-d'],
             'country' => ['required', 'string', 'max:255'],
         ];

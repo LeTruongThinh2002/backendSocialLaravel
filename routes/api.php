@@ -54,7 +54,7 @@ Route::group([
 // Route cho UsersController
 Route::group(['middleware' => 'auth:api'], function () {
     // Lấy thông tin user chỉ định
-    Route::get('/users/{user}', [UsersController::class, 'getProfile'])->name('users.getProfile');
+    Route::get('/users/{user}', [UsersController::class, 'getProfile'])->middleware(\App\Http\Middleware\CheckUserBlock::class)->name('users.getProfile');
     // Cập nhật thông tin user
     Route::put('/users/{user}', [UsersController::class, 'update'])->name('users.update');
     // Xóa user
@@ -63,6 +63,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::put('/users/changePwd/{user}', [UsersController::class, 'changePassword'])->name('users.changePwd');
     // Cập nhật email
     Route::put('/users/changeEmail/{user}', [UsersController::class, 'changeEmail'])->name('users.changeEmail');
+    // Block or unblock user
+    Route::post('/users/block/{user}', [UsersController::class, 'toggleBlockUser'])->name('users.toggleBlockUser');
 });
 
 // Routes for PostsController

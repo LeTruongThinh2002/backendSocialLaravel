@@ -46,6 +46,8 @@ class CheckUserBlock
         } elseif ($request->input('reels_id')) {
             $reels = Reel::find($request->input('reels_id'));
             return $reels ? $reels->user_id : null;
+        } elseif ($request->route('user')) {
+            return $request->route('user')->id;
         }
 
         return null;
