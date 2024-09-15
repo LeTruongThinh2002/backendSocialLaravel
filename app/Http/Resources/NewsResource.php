@@ -17,7 +17,7 @@ class NewsResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'user' => $this->newsUser,
+            'user' => $this->newsUser->only(['id', 'first_name', 'last_name', 'avatar']),
             'description' => $this->description,
             'media' => $this->media, // Lấy danh sách các liên kết media
             'created_at' => $this->created_at,

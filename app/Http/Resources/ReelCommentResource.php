@@ -20,7 +20,9 @@ class ReelCommentResource extends JsonResource
             'parent_comment_id' => $this->parent_comment_id,
             'user' => $this->commentUser->only(['id', 'first_name', 'last_name', 'avatar']),
             'comment' => $this->comment,
-            'like' => $this->commentLike->count(),
+            'like' => $this->commentLike->map(function ($user) {
+                return $user->only(['id', 'first_name', 'last_name', 'avatar']);
+            }),
             'reply' => ReelCommentResource::collection($this->commentReply),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

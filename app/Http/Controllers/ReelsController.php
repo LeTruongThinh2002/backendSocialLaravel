@@ -36,6 +36,19 @@ class ReelsController extends Controller
         return ReelsResource::collection($reels);
     }
 
+    // Toggle like reel
+    public function toggleLikeReel(Reel $reel)
+    {
+        $user = JWTAuth::user();
+        if ($reel->reelsLike->contains('id', $user->id)) {
+            $reel->reelsLike()->detach($user->id);
+        } else {
+            $reel->reelsLike()->attach($user->id);
+        }
+        $reel->load('reelsLike');
+        return new ReelsResource($reel);
+    }
+
     /**
      * Store a newly created resource in storage.
      */
