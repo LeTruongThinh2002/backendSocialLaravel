@@ -63,6 +63,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::put('/users/changePwd/{user}', [UsersController::class, 'changePassword'])->name('users.changePwd');
     // Cập nhật email
     Route::put('/users/changeEmail/{user}', [UsersController::class, 'changeEmail'])->name('users.changeEmail');
+    // Toggle follow user
+    Route::post('/users/follow/{user}', [UsersController::class, 'toggleFollowUser'])->middleware(\App\Http\Middleware\CheckUserBlock::class)->name('users.toggleFollowUser');
     // Block or unblock user
     Route::post('/users/block/{user}', [UsersController::class, 'toggleBlockUser'])->name('users.toggleBlockUser');
 });
@@ -91,6 +93,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('/posts/{getUser}/getPosts', [PostsController::class, 'getUserPosts'])
         ->middleware(\App\Http\Middleware\CheckUserBlock::class)
         ->name('posts.getUserPosts');
+    // Toggle like post
+    Route::post('/posts/like/{post}', [PostsController::class, 'toggleLikePost'])->middleware(\App\Http\Middleware\CheckUserBlock::class)->name('posts.toggleLikePost');
 });
 
 // Routes for ReelsController
@@ -111,6 +115,8 @@ Route::group(['middleware' => 'auth:api'], function () {
     Route::get('/reels/{getUser}/getReels', [ReelsController::class, 'getUserReels'])
         ->middleware(\App\Http\Middleware\CheckUserBlock::class)
         ->name('reels.getUserReels');
+    // Toggle like reel
+    Route::post('/reels/like/{reel}', [ReelsController::class, 'toggleLikeReel'])->middleware(\App\Http\Middleware\CheckUserBlock::class)->name('reels.toggleLikeReel');
 });
 
 // Routes for NewsController
