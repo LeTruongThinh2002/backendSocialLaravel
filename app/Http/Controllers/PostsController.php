@@ -63,6 +63,18 @@ class PostsController extends Controller
         return PostsResource::collection($posts);
     }
 
+    public function toggleLikePost(Post $post)
+    {
+        $user = JWTAuth::user();
+        if ($post->postsLike->contains('id', $user->id)) {
+            $post->postsLike()->detach($user->id);
+        } else {
+            $post->postsLike()->attach($user->id);
+        }
+        $post->load('postsLike');
+        return new PostsResource($post);
+    }
+
     /**
      * Store a newly created resource in storage.
      */

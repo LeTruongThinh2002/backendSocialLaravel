@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\NewsResource;
-use App\Models\News;
+use App\Models\news;
 use App\Http\Requests\StoreNewsRequest;
 use App\Http\Requests\UpdateNewsRequest;
 use App\Models\User;
@@ -21,7 +21,7 @@ class NewsController extends Controller
         $user = JWTAuth::user();
 
         // Lọc các bài viết
-        $news = News::whereNotIn('user_id', function ($query) use ($user) {
+        $news = news::whereNotIn('user_id', function ($query) use ($user) {
             $query->select('user_blocked')
                 ->from('user_block')
                 ->where('user_id', $user->id);
@@ -38,7 +38,7 @@ class NewsController extends Controller
     public function store(StoreNewsRequest $request)
     {
         // Tạo bài viết mới
-        $news = News::create($request->validated());
+        $news = news::create($request->validated());
 
         return new NewsResource($news);
     }
@@ -46,7 +46,7 @@ class NewsController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(News $news)
+    public function show(news $news)
     {
         return new NewsResource($news);
     }
@@ -54,7 +54,7 @@ class NewsController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateNewsRequest $request, News $news)
+    public function update(UpdateNewsRequest $request, news $news)
     {
         // Kiểm tra quyền sở hữu
         if ($news->user_id !== JWTAuth::user()->id) {
@@ -68,7 +68,7 @@ class NewsController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(News $news)
+    public function destroy(news $news)
     {
         // Kiểm tra quyền sở hữu
         if ($news->user_id !== JWTAuth::user()->id) {
@@ -85,7 +85,7 @@ class NewsController extends Controller
         $user = JWTAuth::user();
         $threeDaysAgo = Carbon::now()->subDays(3);
 
-        $groupedNews = News::query()
+        $groupedNews = news::query()
             // lấy thông tin user
             ->join('users', 'news.user_id', '=', 'users.id')
             // chỉ lấy news từ những người dùng đang follow

@@ -19,14 +19,11 @@ class PostsCommentResource extends JsonResource
             'id' => $this->id,
             'post_id' => $this->post_id,
             'parent_comment_id' => $this->parent_comment_id,
-            'user' => [
-                'id' => $this->commentUser->id,
-                'first_name' => $this->commentUser->first_name,
-                'last_name' => $this->commentUser->last_name,
-                'avatar' => $this->commentUser->avatar,
-            ],
+            'user' => $this->commentUser->only(['id', 'first_name', 'last_name', 'avatar']),
             'comment' => $this->comment,
-            'like' => $this->commentLike->pluck('id'),
+            'like' => $this->commentLike->map(function ($user) {
+                return $user->only(['id', 'first_name', 'last_name', 'avatar']);
+            }),
             'reply' => PostsCommentResource::collection($this->commentReply),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
