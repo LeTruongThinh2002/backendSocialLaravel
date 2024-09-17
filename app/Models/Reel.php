@@ -9,6 +9,12 @@ class Reel extends Model
 {
     use HasFactory;
     protected $table = 'reels';
+
+    protected $fillable = [
+        'user_id',
+        'description',
+        'media',
+    ];
     public function reelsUser()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');

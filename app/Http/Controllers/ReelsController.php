@@ -7,6 +7,7 @@ use App\Models\Reel;
 use App\Http\Requests\StoreReelRequest;
 use App\Http\Requests\UpdateReelRequest;
 use App\Models\User;
+use Carbon\Carbon;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class ReelsController extends Controller
@@ -19,18 +20,20 @@ class ReelsController extends Controller
         $user = JWTAuth::user();
 
         // Lọc các reels từ những người dùng đã bị chặn
-        $reels = Reel::whereNotIn('user_id', function ($query) use ($user) {
-            $query->select('user_blocked')
-                ->from('user_block')
-                ->where('user_id', $user->id);
-        })
-            // Lọc các bài viết từ những người dùng đã chặn người đăng nhập
-            ->whereNotIn('user_id', function ($query) use ($user) {
-                $query->select('user_id')
-                    ->from('user_block')
-                    ->where('user_blocked', $user->id);
+        $reels = Reel::select('reels.id', 'reels.user_id', 'reels.description', 'reels.created_at', 'reels.updated_at')
+            ->leftJoin('user_follow', function ($join) use ($user) {
+                $join->on('user_follow.user_following', '=', 'reels.user_id')
+                    ->where('user_follow.user_id', $user->id);
             })
-            ->orderBy('created_at', 'desc')
+            ->whereNotNull('user_follow.user_id')
+            ->where('reels.created_at', '<=', Carbon::now()->subDays(3))
+            ->with([
+                'reelsUser:id,first_name,last_name,avatar',
+                'reelsComment:reels_id',
+                'reelsLike:id,first_name,last_name,avatar',
+                'reelsMedia:reels_id,media'
+            ])
+            ->orderBy('reels.created_at', 'desc')
             ->paginate(5);
 
         return ReelsResource::collection($reels);
@@ -40,11 +43,7 @@ class ReelsController extends Controller
     public function toggleLikeReel(Reel $reel)
     {
         $user = JWTAuth::user();
-        if ($reel->reelsLike->contains('id', $user->id)) {
-            $reel->reelsLike()->detach($user->id);
-        } else {
-            $reel->reelsLike()->attach($user->id);
-        }
+        $reel->reelsLike()->toggle($user->id);
         $reel->load('reelsLike');
         return new ReelsResource($reel);
     }
@@ -99,8 +98,15 @@ class ReelsController extends Controller
     // Lấy tất cả reels của người dùng chỉ định
     public function getUserReels(User $getUser)
     {
-        $reels = $getUser->reels()
-            ->orderBy('created_at', 'desc')
+        $reels = Reel::select('reels.id', 'reels.user_id', 'reels.description', 'reels.created_at', 'reels.updated_at')
+            ->where('reels.user_id', $getUser->id)
+            ->with([
+                'reelsUser:id,first_name,last_name,avatar',
+                'reelsComment:reels_id',
+                'reelsLike:id,first_name,last_name,avatar',
+                'reelsMedia:reels_id,media'
+            ])
+            ->latest('reels.created_at')
             ->get();
 
         return ReelsResource::collection($reels);

@@ -9,6 +9,12 @@ class ReelsComment extends Model
 {
     use HasFactory;
     protected $table = 'reels_comment';
+    protected $fillable = [
+        'user_id',
+        'reels_id',
+        'parent_comment_id',
+        'comment',
+    ];
 
     public function commentUser()
     {

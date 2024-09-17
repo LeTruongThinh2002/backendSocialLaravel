@@ -58,17 +58,19 @@ class UsersController extends Controller
             $authUser = JWTAuth::user();
             $isBlocked = $authUser->userBlock()->where('id', $user->id)->exists();
 
-            if ($isBlocked) {
-                $authUser->userBlock()->detach($user->id);
-                $message = 'User unblocked successfully.';
-            } else {
-                $authUser->userBlock()->attach($user->id, ['created_at' => now()]);
-                $message = 'User blocked successfully.';
+            if (!$isBlocked) {
+                $authUser->userFollow()->detach($user->id);
+                $user->userFollow()->detach($authUser->id);
             }
+            $authUser->userBlock()->toggle($user->id);
 
             $authUser->load('userBlock');
 
-            return response()->json(['userBlock' => $authUser->userBlock], 200);
+            return response()->json([
+                'userBlock' => $authUser->userBlock->map(function ($user) {
+                    return $user->only(['id', 'first_name', 'last_name', 'avatar']);
+                })
+            ], 200);
         } catch (Throwable $error) {
             Log::error('Toggle block user error: ' . $error->getMessage());
             return response()->json([
@@ -82,14 +84,7 @@ class UsersController extends Controller
     {
         try {
             $authUser = JWTAuth::user();
-            $isFollowed = $authUser->userFollow()->where('id', $user->id)->exists();
-
-            if ($isFollowed) {
-                $authUser->userFollow()->detach($user->id);
-            } else {
-                $authUser->userFollow()->attach($user->id, ['created_at' => now()]);
-            }
-
+            $authUser->userFollow()->toggle($user->id);
             $authUser->load('userFollow');
 
             return response()->json([
