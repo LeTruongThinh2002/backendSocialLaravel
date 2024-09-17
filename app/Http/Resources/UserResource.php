@@ -27,9 +27,13 @@ class UserResource extends JsonResource
                 : null,
             "avatar" => $this->avatar,
             "background" => $this->background,
-            "userFollow" => $this->userFollow->pluck('id'),
+            "userFollow" => $this->userFollow->map(function ($user) {
+                return $user->only(['id', 'first_name', 'last_name', 'avatar']);
+            }),
             "friends" => $friends,
-            "userBlock" => $this->userBlock->pluck('id'),
+            "userBlock" => $this->userBlock->map(function ($user) {
+                return $user->only(['id', 'first_name', 'last_name', 'avatar']);
+            }),
         ];
     }
 }
