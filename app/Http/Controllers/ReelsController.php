@@ -98,13 +98,13 @@ class ReelsController extends Controller
     // Lấy tất cả reels của người dùng chỉ định
     public function getUserReels(User $getUser)
     {
-        $reels = Reel::select('reels.id', 'reels.user_id', 'reels.description', 'reels.created_at', 'reels.updated_at')
+        $reels = Reel::select('reels.id', 'reels.user_id', 'reels.description', 'reels.media', 'reels.created_at', 'reels.updated_at')
             ->where('reels.user_id', $getUser->id)
             ->with([
                 'reelsUser:id,first_name,last_name,avatar',
                 'reelsComment:reels_id',
                 'reelsLike:id,first_name,last_name,avatar',
-                'reelsMedia:reels_id,media'
+
             ])
             ->latest('reels.created_at')
             ->get();
