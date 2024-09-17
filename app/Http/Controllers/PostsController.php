@@ -9,6 +9,7 @@ use App\Http\Requests\UpdatePostRequest;
 use App\Models\PostsMedia;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 
@@ -22,25 +23,34 @@ class PostsController extends Controller
     {
         $user = JWTAuth::user();
 
-        // Lọc các bài viết từ những người dùng không được theo dõi và không bị chặn
-        $posts = Post::whereNotIn('user_id', function ($query) use ($user) {
-            $query->select('user_following')
-                ->from('user_follow')
-                ->where('user_id', $user->id);
-        })
-            // Lọc các bài viết từ những người dùng đã bị chặn
-            ->whereNotIn('user_id', function ($query) use ($user) {
-                $query->select('user_blocked')
-                    ->from('user_block')
-                    ->where('user_id', $user->id);
+        $posts = Post::select('posts.id', 'posts.user_id', 'posts.description', 'posts.created_at', 'posts.updated_at')
+            // Lấy các bài viết của người dùng mà người đăng nhập đang theo dõi
+            ->leftJoin('user_follow', function ($join) use ($user) {
+                $join->on('user_follow.user_following', '=', 'posts.user_id')
+                    ->where('user_follow.user_id', $user->id);
             })
-            // Lọc các bài viết từ những người dùng đã chặn người đăng nhập
-            ->whereNotIn('user_id', function ($query) use ($user) {
-                $query->select('user_id')
-                    ->from('user_block')
-                    ->where('user_blocked', $user->id);
+            // Lấy các bài viết của người dùng mà người đăng nhập đang block
+            ->leftJoin('user_block as block1', function ($join) use ($user) {
+                $join->on('block1.user_blocked', '=', 'posts.user_id')
+                    ->where('block1.user_id', $user->id);
             })
-            ->orderBy('created_at', 'desc')
+            // Lấy các bài viết của người dùng mà đang block người đăng nhập
+            ->leftJoin('user_block as block2', function ($join) use ($user) {
+                $join->on('block2.user_id', '=', 'posts.user_id')
+                    ->where('block2.user_blocked', $user->id);
+            })
+            // lọc bỏ các bài viết của người dùng đang theo dõi, bị block và block người dùng đăng nhập
+            ->whereNull('user_follow.user_id')
+            ->whereNull('block1.user_id')
+            ->whereNull('block2.user_id')
+            // Lấy thông tin người dùng, bình luận, like và media của bài viết
+            ->with([
+                'postsUser:id,first_name,last_name,avatar',
+                'postsComment:post_id',
+                'postsLike:id,first_name,last_name,avatar',
+                'postsMedia:post_id,media'
+            ])
+            ->latest('posts.created_at')
             ->paginate(5);
 
         return PostsResource::collection($posts);
@@ -48,29 +58,33 @@ class PostsController extends Controller
 
     public function followedPosts()
     {
-        $user = JWTAuth::user();
+        // $user = JWTAuth::user();
 
         // Lọc các bài viết từ những người dùng mà người đăng nhập đang theo dõi
-        $posts = Post::whereIn('user_id', function ($query) use ($user) {
-            $query->select('user_following')
-                ->from('user_follow')
-                ->where('user_id', $user->id);
-        })
-            ->where('created_at', '<=', Carbon::now()->subDays(3))
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $user = JWTAuth::user()->load('userFollow');
 
+        $posts = Post::select('posts.id', 'posts.user_id', 'posts.description', 'posts.created_at', 'posts.updated_at')
+            ->leftJoin('user_follow', function ($join) use ($user) {
+                $join->on('user_follow.user_following', '=', 'posts.user_id')
+                    ->where('user_follow.user_id', $user->id);
+            })
+            ->whereNotNull('user_follow.user_id')
+            ->where('posts.created_at', '<=', Carbon::now()->subDays(3))
+            ->with([
+                'postsUser:id,first_name,last_name,avatar',
+                'postsComment:post_id',
+                'postsLike:id,first_name,last_name,avatar',
+                'postsMedia:post_id,media'
+            ])
+            ->orderBy('posts.created_at', 'desc')
+            ->paginate(5);
         return PostsResource::collection($posts);
     }
 
     public function toggleLikePost(Post $post)
     {
         $user = JWTAuth::user();
-        if ($post->postsLike->contains('id', $user->id)) {
-            $post->postsLike()->detach($user->id);
-        } else {
-            $post->postsLike()->attach($user->id);
-        }
+        $post->postsLike()->toggle($user->id);
         $post->load('postsLike');
         return new PostsResource($post);
     }
@@ -147,8 +161,15 @@ class PostsController extends Controller
     // Lấy tất cả bài viết của người dùng chỉ định
     public function getUserPosts(User $getUser)
     {
-        $posts = $getUser->posts()
-            ->orderBy('created_at', 'desc')
+        $posts = Post::select('posts.id', 'posts.user_id', 'posts.description', 'posts.created_at', 'posts.updated_at')
+            ->where('posts.user_id', $getUser->id)
+            ->with([
+                'postsUser:id,first_name,last_name,avatar',
+                'postsComment:post_id',
+                'postsLike:id,first_name,last_name,avatar',
+                'postsMedia:post_id,media'
+            ])
+            ->latest('posts.created_at')
             ->get();
 
         return PostsResource::collection($posts);
