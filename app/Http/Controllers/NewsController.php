@@ -141,7 +141,7 @@ class NewsController extends Controller
     // Lấy tất cả news của người dùng chỉ định
     public function getUserNews(User $getUser)
     {
-        $news = News::select('news.id', 'news.user_id', 'news.description', 'news.created_at', 'news.updated_at')
+        $news = news::select('news.id', 'news.user_id', 'news.description', 'news.created_at', 'news.updated_at')
             ->where('news.user_id', $getUser->id)
             ->with([
                 'newsUser:id,first_name,last_name,avatar',
