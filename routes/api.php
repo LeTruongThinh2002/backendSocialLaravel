@@ -30,7 +30,7 @@ Route::group([
     Route::post('login', [AuthController::class, 'login'])->name('login');
     // Đăng ký
     Route::post('register', [AuthController::class, 'register'])->name('register');
-    // Lấy thông tin user đăng nhập bằng jwt token  
+    // xác thực user đăng nhập bằng jwt token  
     Route::get('fetchProfile', [AuthController::class, 'fetchProfile'])->middleware('auth:api')->name('fetchProfile');
     // Đăng xuất    
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api')->name('logout');
@@ -53,6 +53,8 @@ Route::group([
 
 // Route cho UsersController
 Route::group(['middleware' => 'auth:api'], function () {
+    // Lấy thông tin user đang đăng nhập
+    Route::get('/users/authUserInfo', [UsersController::class, 'getAuthUserInfo'])->name('users.getAuthUserInfo');
     // Lấy thông tin user chỉ định
     Route::get('/users/{user}', [UsersController::class, 'getProfile'])->middleware(\App\Http\Middleware\CheckUserBlock::class)->name('users.getProfile');
     // Cập nhật thông tin user
