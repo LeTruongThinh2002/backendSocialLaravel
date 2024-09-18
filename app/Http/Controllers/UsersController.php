@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserResource;
 use Exception;
 use Throwable;
 use App\Models\User;
@@ -47,6 +48,18 @@ class UsersController extends Controller
             Log::error('Get profile error: ' . $error->getMessage());
             return response()->json([
                 'message' => 'An error occurred while fetching the profile.'
+            ], 500);
+        }
+    }
+
+    public function getAuthUserInfo()
+    {
+        try {
+            return response()->json(new ProfileResource(JWTAuth::user()));
+        } catch (Throwable $error) {
+            Log::error('Get auth user info error: ' . $error->getMessage());
+            return response()->json([
+                'message' => 'An error occurred while fetching the auth user info.'
             ], 500);
         }
     }
