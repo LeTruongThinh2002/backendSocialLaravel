@@ -113,7 +113,7 @@ class AuthController extends Controller
     public function fetchProfile()
     {
 
-        return response()->json(new UserResource(JWTAuth::user()));
+        return response()->json(JWTAuth::user());
     }
     public function logout()
     {
