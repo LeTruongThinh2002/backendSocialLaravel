@@ -141,14 +141,42 @@ class NewsController extends Controller
     // Lấy tất cả news của người dùng chỉ định
     public function getUserNews(User $getUser)
     {
-        $news = news::select('news.id', 'news.user_id', 'news.media', 'news.description', 'news.created_at', 'news.updated_at')
+        // Sử dụng join để lấy thông tin news cùng với thông tin user trong một truy vấn
+        $news = news::query()
+            ->join('users', 'news.user_id', '=', 'users.id')
             ->where('news.user_id', $getUser->id)
-            ->with([
-                'newsUser:id,first_name,last_name,avatar',
-            ])
-            ->latest('news.created_at')
-            ->get();
+            ->select(
+                'news.id',
+                'news.user_id',
+                'news.media',
+                'news.description',
+                'news.created_at',
+                'users.id as user_id',
+                'users.first_name',
+                'users.last_name',
+                'users.avatar'
+            )
+            ->latest('news.created_at')->get()->groupBy('user_id')
+            ->map(function ($item) {
+                return [
+                    'user' => [
+                        'id' => $item->first()->user_id,
+                        'first_name' => $item->first()->first_name,
+                        'last_name' => $item->first()->last_name,
+                        'avatar' => $item->first()->avatar,
+                    ],
+                    'news' => $item->map(function ($item) {
+                        return [
+                            'id' => $item->id,
+                            'description' => $item->description,
+                            'media' => $item->media,
+                            'created_at' => $item->created_at,
+                        ];
+                    })
+                ];
+            })->values()->all();
 
-        return NewsResource::collection($news);
+        return response()->json($news);
+
     }
 }
