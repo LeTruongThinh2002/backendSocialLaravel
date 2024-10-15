@@ -53,6 +53,10 @@ Route::group([
 
 // Route cho UsersController
 Route::group(['middleware' => 'auth:api'], function () {
+    // Lấy user được recommend
+    Route::get('/users/recommend', [UsersController::class, 'recommendUsers'])->name('users.recommendUsers');
+    // Tìm kiếm user
+    Route::get('/users/search', [UsersController::class, 'searchUser'])->name('users.searchUser');
     // Lấy thông tin user đang đăng nhập
     Route::get('/users/authUserInfo', [UsersController::class, 'getAuthUserInfo'])->name('users.getAuthUserInfo');
     // Lấy thông tin user chỉ định

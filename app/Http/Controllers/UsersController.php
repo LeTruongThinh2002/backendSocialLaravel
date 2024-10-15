@@ -18,7 +18,7 @@ use App\Http\Requests\UpdateusersRequest;
 use App\Http\Requests\ChangePasswordRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-
+use Illuminate\Http\Request;
 class UsersController extends Controller
 {
     /**
@@ -241,4 +241,57 @@ class UsersController extends Controller
             ], 500);
         }
     }
+
+    public function recommendUsers()
+    {
+        $authUser = JWTAuth::user();
+
+        $users = User::select('users.id', 'users.first_name', 'users.last_name', 'users.avatar')
+            ->leftJoin('user_follow as uf', 'uf.user_following', '=', 'users.id')
+            ->leftJoin('user_block as block1', function ($join) use ($authUser) {
+                $join->on('block1.user_blocked', '=', 'users.id')
+                    ->where('block1.user_id', '=', $authUser->id);
+            })
+            ->leftJoin('user_block as block2', function ($join) use ($authUser) {
+                $join->on('block2.user_id', '=', 'users.id')
+                    ->where('block2.user_blocked', '=', $authUser->id);
+            })
+            ->whereNull('block1.user_id') // Đảm bảo không có block từ authUser đến user
+            ->whereNull('block2.user_id') // Đảm bảo không có block từ user đến authUser
+            ->where('uf.user_id', '!=', $authUser->id) // Đảm bảo authUser không follow user
+            ->selectRaw('COUNT(uf.user_id) as follow_count') // Thêm số lượng follow
+            ->groupBy('users.id', 'users.first_name', 'users.last_name', 'users.avatar')
+            ->orderByRaw('follow_count DESC') // Sắp xếp theo số lượng follower từ cao đến thấp
+            ->limit(5)
+            ->get();
+
+        return response()->json([
+            'recommendUsers' => $users
+        ], status: 200);
+    }
+
+    public function searchUser(Request $request)
+    {
+        $authUser = JWTAuth::user();
+        $users = User::select('users.id', 'users.first_name', 'users.last_name', 'users.avatar')
+            ->where('first_name', 'like', '%' . $request->search . '%')
+            ->orWhere('last_name', 'like', '%' . $request->search . '%')
+            ->orWhere('email', 'like', '%' . $request->search . '%')
+            ->leftJoin('user_block as block1', function ($join) use ($authUser) {
+                $join->on('block1.user_blocked', '=', 'users.id')
+                    ->where('block1.user_id', '=', $authUser->id);
+            })
+            ->leftJoin('user_block as block2', function ($join) use ($authUser) {
+                $join->on('block2.user_id', '=', 'users.id')
+                    ->where('block2.user_blocked', '=', $authUser->id);
+            })
+            ->whereNull('block1.user_id')
+            ->whereNull('block2.user_id')
+            ->limit(10)
+            ->get();
+        return response()->json([
+            'searchUsers' => $users
+        ], 200);
+    }
+
 }
