@@ -18,22 +18,29 @@ class ReelsController extends Controller
     public function index()
     {
         $user = JWTAuth::user();
+        $threeDaysAgo = now()->subDays(3);
 
-        // Lọc các reels từ những người dùng đã bị chặn
-        $reels = Reel::select('reels.id', 'reels.user_id', 'reels.description', 'reels.created_at', 'reels.updated_at')
+        $reels = Reel::select('reels.id', 'reels.user_id', 'reels.description', 'reels.media', 'reels.created_at', 'reels.updated_at')
             ->leftJoin('user_follow', function ($join) use ($user) {
                 $join->on('user_follow.user_following', '=', 'reels.user_id')
                     ->where('user_follow.user_id', $user->id);
             })
-            ->whereNotNull('user_follow.user_id')
-            ->where('reels.created_at', '<=', Carbon::now()->subDays(3))
+            ->leftJoin('user_block as block1', function ($join) use ($user) {
+                $join->on('block1.user_blocked', '=', 'reels.user_id')
+                    ->where('block1.user_id', $user->id);
+            })
+            ->leftJoin('user_block as block2', function ($join) use ($user) {
+                $join->on('block2.user_id', '=', 'reels.user_id')
+                    ->where('block2.user_blocked', $user->id);
+            })
+            ->whereNull('block1.user_id') // Đảm bảo không có block từ authUser đến user
+            ->whereNull('block2.user_id') // Đảm bảo không có block từ user đến authUser
             ->with([
                 'reelsUser:id,first_name,last_name,avatar',
                 'reelsComment:reels_id',
                 'reelsLike:id,first_name,last_name,avatar',
-                'reelsMedia:reels_id,media'
             ])
-            ->orderBy('reels.created_at', 'desc')
+            ->orderByRaw('CASE WHEN user_follow.user_id IS NOT NULL AND reels.created_at >= ? THEN 0 ELSE 1 END, reels.created_at DESC', [$threeDaysAgo])
             ->paginate(5);
 
         return ReelsResource::collection($reels);
