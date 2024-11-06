@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SearchUserRequest;
 use Exception;
 use Throwable;
 use App\Models\User;
@@ -228,4 +229,30 @@ class UsersController extends Controller
             ], 500);
         }
     }
+
+    public function searchUser(SearchUserRequest $request)
+    {
+        $authUser = JWTAuth::user();
+
+        $users = User::select('id', 'first_name', 'last_name', 'avatar', 'background', 'email')
+            ->leftJoin('user_block', function ($join) use ($authUser) {
+                $join->on('user_block.user_blocked', '=', 'users.id')
+                    ->where('user_block.user_id', $authUser->id);
+            })
+            ->leftJoin('user_block as block2', function ($join) use ($authUser) {
+                $join->on('block2.user_id', '=', 'users.id')
+                    ->where('block2.user_blocked', $authUser->id);
+            })
+            ->whereNull('user_block.user_id')
+            ->whereNull('block2.user_id')
+            ->where(function ($query) use ($request) {
+                $searchTerm = $request->input('query');
+                $query->where('first_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('last_name', 'like', '%' . $searchTerm . '%');
+            })
+            ->paginate(10);
+
+        return response()->json($users);
+    }
+
 }

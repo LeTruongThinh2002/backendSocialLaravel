@@ -53,6 +53,8 @@ Route::group([
 
 // Route cho UsersController
 Route::group(['middleware' => 'auth:api'], function () {
+    // Search user
+    Route::get('/users/search', [UsersController::class, 'searchUser'])->name('users.searchUser');
     // Lấy thông tin user chỉ định
     Route::get('/users/{user}', [UsersController::class, 'getProfile'])->middleware(\App\Http\Middleware\CheckUserBlock::class)->name('users.getProfile');
     // Cập nhật thông tin user
