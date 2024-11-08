@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SearchUserRequest;
 use App\Http\Resources\UserResource;
 use Exception;
 use Throwable;
@@ -270,28 +271,29 @@ class UsersController extends Controller
         ], status: 200);
     }
 
-    public function searchUser(Request $request)
+    public function searchUser(SearchUserRequest $request)
     {
         $authUser = JWTAuth::user();
-        $users = User::select('users.id', 'users.first_name', 'users.last_name', 'users.avatar')
-            ->where('first_name', 'like', '%' . $request->search . '%')
-            ->orWhere('last_name', 'like', '%' . $request->search . '%')
-            ->orWhere('email', 'like', '%' . $request->search . '%')
-            ->leftJoin('user_block as block1', function ($join) use ($authUser) {
-                $join->on('block1.user_blocked', '=', 'users.id')
-                    ->where('block1.user_id', '=', $authUser->id);
+
+        $users = User::select('id', 'first_name', 'last_name', 'avatar', 'background', 'email')
+            ->leftJoin('user_block', function ($join) use ($authUser) {
+                $join->on('user_block.user_blocked', '=', 'users.id')
+                    ->where('user_block.user_id', $authUser->id);
             })
             ->leftJoin('user_block as block2', function ($join) use ($authUser) {
                 $join->on('block2.user_id', '=', 'users.id')
-                    ->where('block2.user_blocked', '=', $authUser->id);
+                    ->where('block2.user_blocked', $authUser->id);
             })
-            ->whereNull('block1.user_id')
+            ->whereNull('user_block.user_id')
             ->whereNull('block2.user_id')
-            ->limit(10)
-            ->get();
-        return response()->json([
-            'searchUsers' => $users
-        ], 200);
+            ->where(function ($query) use ($request) {
+                $searchTerm = $request->input('query');
+                $query->where('first_name', 'like', '%' . $searchTerm . '%')
+                    ->orWhere('last_name', 'like', '%' . $searchTerm . '%');
+            })
+            ->paginate(10);
+
+        return response()->json($users);
     }
 
 }
