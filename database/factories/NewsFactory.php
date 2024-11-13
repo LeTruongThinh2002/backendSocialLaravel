@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Services\PixabayService;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\news>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\News>
  */
 class NewsFactory extends Factory
 {
@@ -16,10 +17,15 @@ class NewsFactory extends Factory
      */
     public function definition(): array
     {
+        $pixabayService = new PixabayService();
+
+        // Sử dụng phương thức getRandomMedia để lấy media ngẫu nhiên
+        $mediaUrl = $pixabayService->getRandomMedia('nature');
+
         return [
             'description' => $this->faker->text(100),
-            'media' => $this->faker->imageUrl(),
-            'user_id' => \App\Models\User::inRandomOrder()->first()->id
+            'media' => $mediaUrl,
+            'user_id' => \App\Models\User::inRandomOrder()->first()->id,
         ];
     }
 }
