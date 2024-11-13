@@ -23,9 +23,27 @@ class StorePostRequest extends FormRequest
     {
         return [
             'user_id' => 'required|exists:users,id',
-            'description' => 'required|string|max:255',
+            'description' => [
+                'required',
+                'json', // Kiểm tra xem có phải là JSON hợp lệ
+                function ($attribute, $value, $fail) {
+                    $decodedValue = json_decode($value, true);
+                    if (!is_array($decodedValue)) {
+                        return $fail("The {$attribute} field must be a valid JSON object.");
+                    }
+
+                    if (!isset($decodedValue['html']) || !is_string($decodedValue['html'])) {
+                        return $fail("The {$attribute}.html field must be a string.");
+                    }
+
+                    if (!isset($decodedValue['json']) || !is_array($decodedValue['json'])) {
+                        return $fail("The {$attribute}.json field must be an array.");
+                    }
+                }
+            ],
             'media' => 'array',
             'media.*' => 'required|url', // Chấp nhận các liên kết media
         ];
     }
+
 }
