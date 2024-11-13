@@ -1,12 +1,9 @@
 <?php
-
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\User;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\posts>
- */
 class PostFactory extends Factory
 {
     /**
@@ -16,9 +13,17 @@ class PostFactory extends Factory
      */
     public function definition(): array
     {
+        // Đảm bảo user_id luôn là một số nguyên hợp lệ
         return [
-            'description' => $this->faker->text(100),
-            'user_id' => \App\Models\User::inRandomOrder()->first()->id
+            'description' => json_encode(
+                [
+                    'html' => $this->faker->randomHtml(2, 3),
+                    'json' => [
+                        $this->faker->text(10)
+                    ]
+                ]
+            ),
+            'user_id' => \App\Models\User::inRandomOrder()->first()->id, // Kiểm tra xem user có tồn tại không
         ];
     }
 }

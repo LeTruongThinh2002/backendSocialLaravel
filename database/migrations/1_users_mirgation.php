@@ -50,6 +50,18 @@ return new class extends Migration {
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('user_following')->references('id')->on('users')->onDelete('cascade');
         });
+
+        // Create 'user_block' table
+        Schema::create('user_block', function (Blueprint $table) {
+            $table->bigInteger('user_id')->unsigned();
+            $table->bigInteger('user_blocked')->unsigned();
+            $table->timestamps();
+
+            $table->primary(['user_id', 'user_blocked']);
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('user_blocked')->references('id')->on('users')->onDelete('cascade');
+        });
+
     }
 
     /**
@@ -61,5 +73,7 @@ return new class extends Migration {
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('user_follow');
+        Schema::dropIfExists('user_block');
+
     }
 };

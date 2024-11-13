@@ -1,11 +1,11 @@
 <?php
-
 namespace Database\Factories;
 
+use App\Services\PixabayService;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\reels>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Reel>
  */
 class ReelFactory extends Factory
 {
@@ -16,10 +16,20 @@ class ReelFactory extends Factory
      */
     public function definition(): array
     {
+        $pixabayService = new PixabayService();
+        $videoData = $pixabayService->searchVideos('nature', 100);
+
+        // Kiểm tra xem có video nào được trả về không và chọn ngẫu nhiên một video
+        $videoUrl = null;
+        if (!empty($videoData['hits'])) {
+            $randomVideo = $this->faker->randomElement($videoData['hits']);
+            $videoUrl = $randomVideo['videos']['medium']['url'];
+        }
+
         return [
             'user_id' => \App\Models\User::inRandomOrder()->first()->id,
             'description' => $this->faker->text(100),
-            'media' => $this->faker->imageUrl(),
+            'media' => $videoUrl,
         ];
     }
 }
