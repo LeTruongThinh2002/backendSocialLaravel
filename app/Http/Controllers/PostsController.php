@@ -94,20 +94,23 @@ class PostsController extends Controller
      */
     public function store(StorePostRequest $request)
     {
-        // Tạo bài viết mới
-        $post = Post::create($request->validated());
+        try {// Tạo bài viết mới
+            $post = Post::create($request->validated());
 
-        // Lưu các liên kết media
-        if ($request->has('media')) {
-            foreach ($request->input('media') as $mediaUrl) {
-                PostsMedia::create([
-                    'post_id' => $post->id,
-                    'media' => $mediaUrl,
-                ]);
+            // Lưu các liên kết media
+            if ($request->has('media')) {
+                foreach ($request->input('media') as $mediaUrl) {
+                    PostsMedia::create([
+                        'post_id' => $post->id,
+                        'media' => $mediaUrl,
+                    ]);
+                }
             }
-        }
 
-        return new PostsResource($post);
+            return new PostsResource($post);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**
