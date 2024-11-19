@@ -37,10 +37,13 @@ class NewsController extends Controller
      */
     public function store(StoreNewsRequest $request)
     {
-        // Tạo bài viết mới
-        $news = news::create($request->validated());
+        try { // Tạo bài viết mới
+            $news = news::create($request->validated());
 
-        return new NewsResource($news);
+            return new NewsResource($news);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**
