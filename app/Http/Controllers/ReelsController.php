@@ -60,10 +60,13 @@ class ReelsController extends Controller
      */
     public function store(StoreReelRequest $request)
     {
-        // Tạo reel mới
-        $reel = Reel::create($request->validated());
+        try { // Tạo reel mới
+            $reel = Reel::create($request->validated());
 
-        return new ReelsResource($reel);
+            return new ReelsResource($reel);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     /**
