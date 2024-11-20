@@ -39,8 +39,9 @@ class NewsController extends Controller
     {
         try { // Tạo bài viết mới
             $user = JWTAuth::user();
-            $request->merge(['user_id' => $user->id]);
-            $news = news::create($request->validated());
+            $validatedData = $request->validated();
+            $validatedData['user_id'] = $user->id;
+            $news = news::create($validatedData);
 
             return new NewsResource($news);
         } catch (\Exception $e) {
