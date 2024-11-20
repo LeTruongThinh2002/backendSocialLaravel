@@ -61,6 +61,8 @@ class ReelsController extends Controller
     public function store(StoreReelRequest $request)
     {
         try { // Tạo reel mới
+            $user = JWTAuth::user();
+            $request->merge(['user_id' => $user->id]);
             $reel = Reel::create($request->validated());
 
             return new ReelsResource($reel);
