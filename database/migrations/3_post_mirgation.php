@@ -31,6 +31,7 @@ return new class extends Migration {
             $table->bigIncrements('id');
             $table->bigInteger('post_id')->unsigned();
             $table->string('media');
+            $table->timestamps();
 
             $table->primary(['id', 'post_id']);
             $table->foreign('post_id')->references('id')->on('posts')->onDelete('cascade');

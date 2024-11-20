@@ -62,8 +62,9 @@ class ReelsController extends Controller
     {
         try { // Tạo reel mới
             $user = JWTAuth::user();
-            $request->merge(['user_id' => $user->id]);
-            $reel = Reel::create($request->validated());
+            $validatedData = $request->validated();
+            $validatedData['user_id'] = $user->id;
+            $reel = Reel::create($validatedData);
 
             return new ReelsResource($reel);
         } catch (\Exception $e) {
