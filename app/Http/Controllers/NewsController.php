@@ -38,6 +38,8 @@ class NewsController extends Controller
     public function store(StoreNewsRequest $request)
     {
         try { // Tạo bài viết mới
+            $user = JWTAuth::user();
+            $request->merge(['user_id' => $user->id]);
             $news = news::create($request->validated());
 
             return new NewsResource($news);

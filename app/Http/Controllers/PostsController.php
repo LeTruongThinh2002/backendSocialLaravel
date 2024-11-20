@@ -95,6 +95,8 @@ class PostsController extends Controller
     public function store(StorePostRequest $request)
     {
         try {// Tạo bài viết mới
+            $user = JWTAuth::user();
+            $request->merge(['user_id' => $user->id]);
             $post = Post::create($request->validated());
 
             // Lưu các liên kết media
