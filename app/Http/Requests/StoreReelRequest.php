@@ -14,7 +14,6 @@ class StoreReelRequest extends FormRequest
     public function rules()
     {
         return [
-            'user_id' => 'required|exists:users,id',
             'description' => 'required|string|max:255',
             'media' => 'required|url', // Chấp nhận liên kết video
         ];
